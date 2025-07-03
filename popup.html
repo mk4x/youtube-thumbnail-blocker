@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			body {
+				font-family: sans-serif;
+				padding: 15px;
+				width: 300px;
+				max-width: 300px;
+			}
+			.toggle-container {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin-bottom: 15px;
+			}
+			.toggle-container label {
+				cursor: pointer;
+			}
+			.channel-section {
+				border-top: 1px solid #ddd;
+				padding-top: 15px;
+				margin-top: 15px;
+			}
+			.channel-input {
+				display: flex;
+				gap: 8px;
+				margin-bottom: 10px;
+			}
+			#channelInput {
+				flex: 1;
+				padding: 6px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				font-size: 12px;
+			}
+			#addChannelBtn {
+				padding: 6px 12px;
+				background: #1976d2;
+				color: white;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				font-size: 12px;
+			}
+			#addChannelBtn:hover {
+				background: #1565c0;
+			}
+			.channel-list {
+				max-height: 120px;
+				overflow-y: auto;
+			}
+			.channel-item {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 6px;
+				background: #f5f5f5;
+				margin-bottom: 4px;
+				border-radius: 4px;
+				font-size: 12px;
+			}
+			.remove-btn {
+				background: #d32f2f;
+				color: white;
+				border: none;
+				border-radius: 3px;
+				padding: 2px 6px;
+				cursor: pointer;
+				font-size: 10px;
+			}
+			.remove-btn:hover {
+				background: #c62828;
+			}
+			h4 {
+				margin: 0 0 10px 0;
+				font-size: 14px;
+				color: #333;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="toggle-container">
+			<input type="checkbox" id="toggleThumbnails" />
+			<label for="toggleThumbnails">Blur Thumbnails</label>
+		</div>
+		<div class="toggle-container">
+			<input type="checkbox" id="togglePlaylists" />
+			<label for="togglePlaylists">Blur Playlists</label>
+		</div>
+		<div class="toggle-container">
+			<input type="checkbox" id="toggleVideos" />
+			<label for="toggleVideos">Blur Videos from Blocked Channels</label>
+		</div>
+
+		<div class="channel-section">
+			<h4>Blocked Channels</h4>
+			<div class="channel-input">
+				<input
+					type="text"
+					id="channelInput"
+					placeholder="Enter channel name..."
+				/>
+				<button id="addChannelBtn">Add</button>
+			</div>
+			<div id="channelList" class="channel-list"></div>
+		</div>
+
+		<script src="popup.js"></script>
+	</body>
+</html>
