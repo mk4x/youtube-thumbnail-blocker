@@ -4,6 +4,9 @@ let settings = {
 	blurPlaylists: true,
 	blurVideos: true,
 	blockedChannels: [],
+	thumbnailBlurLevel: 8,
+	playlistBlurLevel: 8,
+	videoBlurLevel: 15,
 };
 
 // inject initial CSS
@@ -29,12 +32,23 @@ function removeInitialBlurCSS() {
 
 // load settings
 chrome.storage.sync.get(
-	["blurThumbnails", "blurPlaylists", "blurVideos", "blockedChannels"],
+	[
+		"blurThumbnails",
+		"blurPlaylists",
+		"blurVideos",
+		"blockedChannels",
+		"thumbnailBlurLevel",
+		"playlistBlurLevel",
+		"videoBlurLevel",
+	],
 	(res) => {
 		settings.blurThumbnails = res.blurThumbnails ?? true;
 		settings.blurPlaylists = res.blurPlaylists ?? true;
 		settings.blurVideos = res.blurVideos ?? true;
 		settings.blockedChannels = res.blockedChannels ?? [];
+		settings.thumbnailBlurLevel = res.thumbnailBlurLevel ?? 8;
+		settings.playlistBlurLevel = res.playlistBlurLevel ?? 8;
+		settings.videoBlurLevel = res.videoBlurLevel ?? 15;
 
 		// apply blurs immediately after loading settings
 		if (document.readyState === "loading") {
@@ -94,7 +108,7 @@ function getCurrentChannelName() {
 }
 
 // blur thumbnails only from specified channels
-function blurThumbnails(blurEnabled, blockedChannels) {
+function blurThumbnails(blurEnabled, blockedChannels, blurLevel = 8) {
 	const allSelectors = [
 		"#thumbnail",
 		"ytd-thumbnail img",
@@ -132,7 +146,7 @@ function blurThumbnails(blurEnabled, blockedChannels) {
 		if (currentChannelBlocked) {
 			allSelectors.forEach((selector) => {
 				document.querySelectorAll(selector).forEach((element) => {
-					element.style.filter = "blur(8px)";
+					element.style.filter = `blur(${blurLevel}px)`;
 				});
 			});
 			return;
@@ -174,7 +188,7 @@ function blurThumbnails(blurEnabled, blockedChannels) {
 						);
 
 					if (shouldBlur) {
-						element.style.filter = "blur(8px)";
+						element.style.filter = `blur(${blurLevel}px)`;
 					} else {
 						element.style.filter = "none";
 					}
@@ -197,7 +211,7 @@ function blurThumbnails(blurEnabled, blockedChannels) {
 }
 
 // blur all playlist thumbnails (simple toggle)
-function blurPlaylists(blurEnabled) {
+function blurPlaylists(blurEnabled, blurLevel = 8) {
 	const playlistSelectors = [
 		"yt-thumbnail-view-model img",
 		".yt-thumbnail-view-model img",
@@ -206,13 +220,15 @@ function blurPlaylists(blurEnabled) {
 
 	playlistSelectors.forEach((selector) => {
 		document.querySelectorAll(selector).forEach((element) => {
-			element.style.filter = blurEnabled ? "blur(8px)" : "none";
+			element.style.filter = blurEnabled
+				? `blur(${blurLevel}px)`
+				: "none";
 		});
 	});
 }
 
 // blur video player if channel is in blocked list
-function blurVideo(blurEnabled, blockedChannels) {
+function blurVideo(blurEnabled, blockedChannels, blurLevel = 15) {
 	const video = document.querySelector(".html5-video-container video");
 
 	if (!video) return;
@@ -234,7 +250,7 @@ function blurVideo(blurEnabled, blockedChannels) {
 		);
 
 		if (shouldBlur) {
-			video.style.filter = "blur(15px)";
+			video.style.filter = `blur(${blurLevel}px)`;
 		} else {
 			video.style.filter = "none";
 		}
@@ -243,9 +259,17 @@ function blurVideo(blurEnabled, blockedChannels) {
 
 // main control function using cached settings
 function applyBlurs() {
-	blurThumbnails(settings.blurThumbnails, settings.blockedChannels);
-	blurPlaylists(settings.blurPlaylists);
-	blurVideo(settings.blurVideos, settings.blockedChannels);
+	blurThumbnails(
+		settings.blurThumbnails,
+		settings.blockedChannels,
+		settings.thumbnailBlurLevel
+	);
+	blurPlaylists(settings.blurPlaylists, settings.playlistBlurLevel);
+	blurVideo(
+		settings.blurVideos,
+		settings.blockedChannels,
+		settings.videoBlurLevel
+	);
 }
 
 // debounced version to prevent excessive calls
@@ -266,6 +290,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 			settings.blurVideos = changes.blurVideos.newValue;
 		if (changes.blockedChannels)
 			settings.blockedChannels = changes.blockedChannels.newValue;
+		if (changes.thumbnailBlurLevel)
+			settings.thumbnailBlurLevel = changes.thumbnailBlurLevel.newValue;
+		if (changes.playlistBlurLevel)
+			settings.playlistBlurLevel = changes.playlistBlurLevel.newValue;
+		if (changes.videoBlurLevel)
+			settings.videoBlurLevel = changes.videoBlurLevel.newValue;
 		debouncedApplyBlurs();
 	}
 });

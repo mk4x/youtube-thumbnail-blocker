@@ -5,21 +5,51 @@ const channelInput = document.getElementById("channelInput");
 const addChannelBtn = document.getElementById("addChannelBtn");
 const channelList = document.getElementById("channelList");
 
+// Blur level sliders
+const thumbnailBlurSlider = document.getElementById("thumbnailBlurSlider");
+const playlistBlurSlider = document.getElementById("playlistBlurSlider");
+const videoBlurSlider = document.getElementById("videoBlurSlider");
+const thumbnailBlurValue = document.getElementById("thumbnailBlurValue");
+const playlistBlurValue = document.getElementById("playlistBlurValue");
+const videoBlurValue = document.getElementById("videoBlurValue");
+
 let blockedChannels = [];
 
-// load current settings
+// Load current settings
 chrome.storage.sync.get(
-	["blurThumbnails", "blurPlaylists", "blurVideos", "blockedChannels"],
+	[
+		"blurThumbnails",
+		"blurPlaylists",
+		"blurVideos",
+		"blockedChannels",
+		"thumbnailBlurLevel",
+		"playlistBlurLevel",
+		"videoBlurLevel",
+	],
 	(data) => {
 		toggleThumbnails.checked = data.blurThumbnails ?? true;
 		togglePlaylists.checked = data.blurPlaylists ?? true;
 		toggleVideos.checked = data.blurVideos ?? true;
 		blockedChannels = data.blockedChannels ?? [];
+
+		// Set blur levels
+		const thumbnailLevel = data.thumbnailBlurLevel ?? 8;
+		const playlistLevel = data.playlistBlurLevel ?? 8;
+		const videoLevel = data.videoBlurLevel ?? 15;
+
+		thumbnailBlurSlider.value = thumbnailLevel;
+		playlistBlurSlider.value = playlistLevel;
+		videoBlurSlider.value = videoLevel;
+
+		thumbnailBlurValue.textContent = `${thumbnailLevel}px`;
+		playlistBlurValue.textContent = `${playlistLevel}px`;
+		videoBlurValue.textContent = `${videoLevel}px`;
+
 		updateChannelList();
 	}
 );
 
-// update the visual channel list
+// Update the visual channel list
 function updateChannelList() {
 	channelList.innerHTML = "";
 	blockedChannels.forEach((channel, index) => {
@@ -75,7 +105,7 @@ toggleThumbnails.addEventListener("change", () => {
 	chrome.storage.sync.set(
 		{ blurThumbnails: toggleThumbnails.checked },
 		() => {
-			reloadCurrentTab();
+			applyChangesImmediately();
 		}
 	);
 });
@@ -83,25 +113,14 @@ toggleThumbnails.addEventListener("change", () => {
 // handle playlist blur toggle
 togglePlaylists.addEventListener("change", () => {
 	chrome.storage.sync.set({ blurPlaylists: togglePlaylists.checked }, () => {
-		reloadCurrentTab();
+		applyChangesImmediately();
 	});
 });
 
 // handle video blur toggle
 toggleVideos.addEventListener("change", () => {
 	chrome.storage.sync.set({ blurVideos: toggleVideos.checked }, () => {
-		// apply changes immediately without reload
-		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-			chrome.scripting.executeScript({
-				target: { tabId: tabs[0].id },
-				func: () => {
-					// rerun the blur function
-					if (typeof applyBlurs === "function") {
-						applyBlurs();
-					}
-				},
-			});
-		});
+		applyChangesImmediately();
 	});
 });
 
@@ -114,3 +133,42 @@ channelInput.addEventListener("keypress", (e) => {
 		addChannel();
 	}
 });
+
+// handle blur level sliders
+thumbnailBlurSlider.addEventListener("input", (e) => {
+	const value = e.target.value;
+	thumbnailBlurValue.textContent = `${value}px`;
+	chrome.storage.sync.set({ thumbnailBlurLevel: parseInt(value) }, () => {
+		applyChangesImmediately();
+	});
+});
+
+playlistBlurSlider.addEventListener("input", (e) => {
+	const value = e.target.value;
+	playlistBlurValue.textContent = `${value}px`;
+	chrome.storage.sync.set({ playlistBlurLevel: parseInt(value) }, () => {
+		applyChangesImmediately();
+	});
+});
+
+videoBlurSlider.addEventListener("input", (e) => {
+	const value = e.target.value;
+	videoBlurValue.textContent = `${value}px`;
+	chrome.storage.sync.set({ videoBlurLevel: parseInt(value) }, () => {
+		applyChangesImmediately();
+	});
+});
+
+// apply changes immediately without reload
+function applyChangesImmediately() {
+	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+		chrome.scripting.executeScript({
+			target: { tabId: tabs[0].id },
+			func: () => {
+				if (typeof applyBlurs === "function") {
+					applyBlurs();
+				}
+			},
+		});
+	});
+}

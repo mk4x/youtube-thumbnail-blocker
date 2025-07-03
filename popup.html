@@ -10,12 +10,55 @@
 			}
 			.toggle-container {
 				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				margin-bottom: 15px;
+			}
+			.toggle-row {
+				display: flex;
 				align-items: center;
 				gap: 10px;
-				margin-bottom: 15px;
 			}
 			.toggle-container label {
 				cursor: pointer;
+			}
+			.slider-container {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-left: 25px;
+			}
+			.blur-slider {
+				flex: 1;
+				height: 4px;
+				background: #ddd;
+				border-radius: 2px;
+				outline: none;
+				-webkit-appearance: none;
+				appearance: none;
+			}
+			.blur-slider::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 16px;
+				height: 16px;
+				border-radius: 50%;
+				background: #1976d2;
+				cursor: pointer;
+			}
+			.blur-slider::-moz-range-thumb {
+				width: 16px;
+				height: 16px;
+				border-radius: 50%;
+				background: #1976d2;
+				cursor: pointer;
+				border: none;
+			}
+			.slider-container span {
+				min-width: 30px;
+				font-size: 11px;
+				color: #666;
+				text-align: right;
 			}
 			.channel-section {
 				border-top: 1px solid #ddd;
@@ -81,16 +124,57 @@
 	</head>
 	<body>
 		<div class="toggle-container">
-			<input type="checkbox" id="toggleThumbnails" />
-			<label for="toggleThumbnails">Blur Thumbnails</label>
+			<div class="toggle-row">
+				<input type="checkbox" id="toggleThumbnails" />
+				<label for="toggleThumbnails">Blur Thumbnails</label>
+			</div>
+			<div class="slider-container">
+				<input
+					type="range"
+					id="thumbnailBlurSlider"
+					min="0"
+					max="100"
+					value="8"
+					class="blur-slider"
+				/>
+				<span id="thumbnailBlurValue">8px</span>
+			</div>
 		</div>
 		<div class="toggle-container">
-			<input type="checkbox" id="togglePlaylists" />
-			<label for="togglePlaylists">Blur Playlists</label>
+			<div class="toggle-row">
+				<input type="checkbox" id="togglePlaylists" />
+				<label for="togglePlaylists">Blur Playlists</label>
+			</div>
+			<div class="slider-container">
+				<input
+					type="range"
+					id="playlistBlurSlider"
+					min="0"
+					max="100"
+					value="8"
+					class="blur-slider"
+				/>
+				<span id="playlistBlurValue">8px</span>
+			</div>
 		</div>
 		<div class="toggle-container">
-			<input type="checkbox" id="toggleVideos" />
-			<label for="toggleVideos">Blur Videos from Blocked Channels</label>
+			<div class="toggle-row">
+				<input type="checkbox" id="toggleVideos" />
+				<label for="toggleVideos"
+					>Blur Videos from Blocked Channels</label
+				>
+			</div>
+			<div class="slider-container">
+				<input
+					type="range"
+					id="videoBlurSlider"
+					min="0"
+					max="100"
+					value="15"
+					class="blur-slider"
+				/>
+				<span id="videoBlurValue">15px</span>
+			</div>
 		</div>
 
 		<div class="channel-section">

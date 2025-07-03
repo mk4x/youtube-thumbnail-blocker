@@ -6,5 +6,8 @@ chrome.runtime.onInstalled.addListener(() => {
 		blurPlaylists: true,
 		blurVideos: true,
 		blockedChannels: [],
+		thumbnailBlurLevel: 8,
+		playlistBlurLevel: 8,
+		videoBlurLevel: 15,
 	});
 });
