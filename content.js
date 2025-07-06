@@ -9,16 +9,26 @@ let settings = {
 	videoBlurLevel: 15,
 };
 
-// inject initial CSS
+// inject initial CSS to blur all likely elements instantly
 function injectInitialBlurCSS() {
 	const style = document.createElement("style");
 	style.id = "youtube-blur-initial";
 	style.textContent = `
-		/* Initial blur styles - will be refined by JavaScript */
-		.youtube-blur-thumbnail { filter: blur(8px) !important; }
-		.youtube-blur-playlist { filter: blur(8px) !important; }
-		.youtube-blur-video { filter: blur(15px) !important; }
-	`;
+        /* Brief privacy blur for all likely YouTube elements */
+        #thumbnail img,
+        ytd-thumbnail img,
+        .ytd-thumbnail img,
+        ytd-playlist-thumbnail #thumbnail,
+        .yt-lockup-view-model-wiz img,
+        ytd-shorts-lockup-view-model img,
+        ytd-reel-item-renderer img,
+        .yt-shorts-thumbnail img,
+        [id*='thumbnail'] img,
+        .html5-video-container {
+            filter: blur(12px) !important;
+            transition: filter 0.1s linear;
+        }
+    `;
 	document.head.appendChild(style);
 }
 
@@ -230,30 +240,30 @@ function blurPlaylists(blurEnabled, blurLevel = 8) {
 // blur video player if channel is in blocked list
 function blurVideo(blurEnabled, blockedChannels, blurLevel = 15) {
 	const video = document.querySelector(".html5-video-container video");
-
+	const container = document.querySelector(".html5-video-container");
+	if (container) container.style.filter = "none";
 	if (!video) return;
-
 	if (!blurEnabled || !blockedChannels || blockedChannels.length === 0) {
 		video.style.filter = "none";
 		return;
 	}
-
 	// check channel name in watch metadata
 	const channelName = document.querySelector(
 		"ytd-video-owner-renderer ytd-channel-name #text, ytd-watch-metadata ytd-channel-name #text, #text.ytd-channel-name"
 	);
-
 	if (channelName) {
 		const channelText = channelName.textContent.trim();
 		const shouldBlur = blockedChannels.some((channel) =>
 			channelText.toLowerCase().includes(channel.toLowerCase())
 		);
-
 		if (shouldBlur) {
 			video.style.filter = `blur(${blurLevel}px)`;
 		} else {
 			video.style.filter = "none";
 		}
+	} else {
+		// If we can't find the channel name, default to removing the blur
+		video.style.filter = "none";
 	}
 }
 
@@ -297,6 +307,34 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 		if (changes.videoBlurLevel)
 			settings.videoBlurLevel = changes.videoBlurLevel.newValue;
 		debouncedApplyBlurs();
+	}
+});
+
+// Listen for messages from popup to refresh blurs
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	if (message.action === "refreshBlur") {
+		// reload settings from storage and re-apply blurs
+		chrome.storage.sync.get(
+			[
+				"blurThumbnails",
+				"blurPlaylists",
+				"blurVideos",
+				"blockedChannels",
+				"thumbnailBlurLevel",
+				"playlistBlurLevel",
+				"videoBlurLevel",
+			],
+			(res) => {
+				settings.blurThumbnails = res.blurThumbnails ?? true;
+				settings.blurPlaylists = res.blurPlaylists ?? true;
+				settings.blurVideos = res.blurVideos ?? true;
+				settings.blockedChannels = res.blockedChannels ?? [];
+				settings.thumbnailBlurLevel = res.thumbnailBlurLevel ?? 8;
+				settings.playlistBlurLevel = res.playlistBlurLevel ?? 8;
+				settings.videoBlurLevel = res.videoBlurLevel ?? 15;
+				debouncedApplyBlurs();
+			}
+		);
 	}
 });
 

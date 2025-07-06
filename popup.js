@@ -71,6 +71,15 @@ function updateChannelList() {
 	});
 }
 
+// send a message to the content script to refresh blurs
+function refreshBlurInTab() {
+	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+		if (tabs[0]?.id) {
+			chrome.tabs.sendMessage(tabs[0].id, { action: "refreshBlur" });
+		}
+	});
+}
+
 // add new channel
 function addChannel() {
 	const channelName = channelInput.value.trim();
@@ -79,7 +88,7 @@ function addChannel() {
 		chrome.storage.sync.set({ blockedChannels }, () => {
 			updateChannelList();
 			channelInput.value = "";
-			reloadCurrentTab();
+			refreshBlurInTab();
 		});
 	}
 }
@@ -89,14 +98,7 @@ function removeChannel(index) {
 	blockedChannels.splice(index, 1);
 	chrome.storage.sync.set({ blockedChannels }, () => {
 		updateChannelList();
-		reloadCurrentTab();
-	});
-}
-
-// reload current tab to apply changes
-function reloadCurrentTab() {
-	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-		chrome.tabs.reload(tabs[0].id);
+		refreshBlurInTab();
 	});
 }
 
@@ -162,13 +164,8 @@ videoBlurSlider.addEventListener("input", (e) => {
 // apply changes immediately without reload
 function applyChangesImmediately() {
 	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-		chrome.scripting.executeScript({
-			target: { tabId: tabs[0].id },
-			func: () => {
-				if (typeof applyBlurs === "function") {
-					applyBlurs();
-				}
-			},
-		});
+		if (tabs[0]?.id) {
+			chrome.tabs.sendMessage(tabs[0].id, { action: "refreshBlur" });
+		}
 	});
 }
